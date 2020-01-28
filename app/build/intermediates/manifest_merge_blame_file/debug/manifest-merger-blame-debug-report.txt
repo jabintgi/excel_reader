@@ -1,0 +1,60 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.parxsys.excelconverter"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="21"
+8-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml
+9        android:targetSdkVersion="29" />
+9-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml
+10
+11    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+11-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:5:5-81
+11-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:5:22-78
+12    <uses-permission android:name="android.permission.STORAGE" />
+12-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:6:5-66
+12-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:6:22-63
+13    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+13-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:7:5-80
+13-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:7:22-77
+14
+15    <application
+15-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:9:5-24:19
+16        android:allowBackup="true"
+16-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:10:9-35
+17        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+17-->[androidx.core:core:1.1.0] /Users/parxsys/.gradle/caches/transforms-2/files-2.1/e9dab9c67c1ee3668e0bbf86c6d8cbd8/core-1.1.0/AndroidManifest.xml:24:18-86
+18        android:debuggable="true"
+19        android:icon="@mipmap/ic_launcher"
+19-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:11:9-43
+20        android:label="@string/app_name"
+20-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:12:9-41
+21        android:roundIcon="@mipmap/ic_launcher_round"
+21-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:13:9-54
+22        android:supportsRtl="true"
+22-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:14:9-35
+23        android:testOnly="true"
+24        android:theme="@style/AppTheme" >
+24-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:15:9-40
+25        <activity android:name="com.parxsys.excelconverter.MainActivity" >
+25-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:16:9-23:20
+25-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:16:19-47
+26            <intent-filter>
+26-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:17:13-22:29
+27                <action android:name="android.intent.action.MAIN" />
+27-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:18:17-69
+27-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:18:25-66
+28                <action android:name="android.intent.action.VIEW" />
+28-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:19:17-69
+28-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:19:25-66
+29
+30                <category android:name="android.intent.category.LAUNCHER" />
+30-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:21:17-77
+30-->/Users/parxsys/Android Projects/Excelconverter/app/src/main/AndroidManifest.xml:21:27-74
+31            </intent-filter>
+32        </activity>
+33    </application>
+34
+35</manifest>
