@@ -742,6 +742,7 @@ id beginning
 id blocking
 id bottom
 id btnRead
+id btnWrite
 id buttonPanel
 id center_vertical
 id chains
@@ -945,6 +946,7 @@ string abc_shareactionprovider_share_with_application
 string abc_toolbar_collapse_description
 string app_name
 string search_menu_title
+string send_to
 string status_bar_notification_info_overflow
 style AlertDialog_AppCompat
 style AlertDialog_AppCompat_Light

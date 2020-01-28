@@ -2,10 +2,12 @@ package com.parxsys.excelconverter;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -13,6 +15,7 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -21,19 +24,22 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.lang.System.out;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -52,11 +58,15 @@ public class MainActivity extends AppCompatActivity {
     FormulaEvaluator formulaEvaluator;
     Row row;
     StringBuilder rowValue;
-    String[] column;
+
     Cell cell;
     CellValue cellValue;
     ProgressBar pb;
     JSONArray jsonArray = new JSONArray();
+    String filePath = Environment.getExternalStorageDirectory().toString();
+
+    int totalRows = 0;
+    int totalColumns = 0;
 
     private TextView textView;
 
@@ -70,13 +80,11 @@ public class MainActivity extends AppCompatActivity {
 
         checkFilePermissions();
 
-
         ////file picker intent
         chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
         chooseFile.setType("*/*");
         chooseFile = Intent.createChooser(chooseFile, "Choose a file");
         //////
-
 
         findViewById(R.id.btnRead).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -84,7 +92,67 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(chooseFile, PICK_RESULT_CODE);
             }
         });
+        findViewById(R.id.btnWrite).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (stream != null) {
+                    writeData();
+                }
+            }
+        });
 
+    }
+
+    private void writeData() {
+        if (isStoragePermissionGranted()) {
+
+            row = extension.equalsIgnoreCase("xlsx") ? sheetXlsx.createRow(totalRows + 1) : sheetXls.createRow(totalRows + 1);
+
+            for (int i = 0; i < totalColumns; i++) {
+                cell = row.createCell(i);
+                cell.setCellValue(i);
+            }
+
+            filePath = src.substring(src.indexOf(filePath));
+            File file = new File(filePath);
+
+            try {
+                FileOutputStream out = new FileOutputStream(file);
+                totalRows++;
+
+                if (extension.equalsIgnoreCase("xlsx")) {
+                    workbookXlsx.write(out);
+                } else {
+                    workbookXls.write(out);
+                }
+
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.e(TAG, "writeData:" + e.getLocalizedMessage());
+            } finally {
+                out.flush();
+                out.close();
+            }
+        }
+    }
+
+    public boolean isStoragePermissionGranted() {
+        String TAG = "Storage Permission";
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (this.checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                Log.v(TAG, "Permission is granted");
+                return true;
+            } else {
+                Log.v(TAG, "Permission is revoked");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+                return false;
+            }
+        } else { //permission is automatically granted on sdk<23 upon installation
+            Log.v(TAG, "Permission is granted");
+            return true;
+        }
     }
 
     @Override
@@ -101,10 +169,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     private void checkFilePermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             int permissionCheck = this.checkSelfPermission("Manifest.permission.READ_EXTERNAL_STORAGE");
             permissionCheck += this.checkSelfPermission("Manifest.permission.WRITE_EXTERNAL_STORAGE");
+            permissionCheck += this.checkSelfPermission("android.permission.WRITE_INTERNAL_STORAGE");
+            permissionCheck += this.checkSelfPermission("android.permission.STORAGE");
+
+
             if (permissionCheck != 0) {
                 this.requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, 1001); //Any number
             }
@@ -136,27 +209,21 @@ public class MainActivity extends AppCompatActivity {
 
                     for (int r = 1; r < rowsCount; r++) {
 
-                        if (fileType.equalsIgnoreCase("xlsx")) {
-                            row = sheetXlsx.getRow(r);
-                        } else {
-                            row = sheetXls.getRow(r);
-                        }
+                        row = fileType.equalsIgnoreCase("xlsx") ? sheetXlsx.getRow(r) : sheetXls.getRow(r);
 
                         if (isRowEmpty(row)) {
                             break;
                         } else {
                             int cellsCount = row.getPhysicalNumberOfCells();
 
+                            totalRows++;
+                            totalColumns = cellsCount;
+
                             rowValue = new StringBuilder();
                             JSONObject object = new JSONObject();
 
-                            for (int c = 1; c < cellsCount; c++) {
-
-                                if (fileType.equalsIgnoreCase("xlsx")) {
-                                    key = getCellAsString(sheetXlsx.getRow(0), c, formulaEvaluator);
-                                } else {
-                                    key = getCellAsString(sheetXls.getRow(0), c, formulaEvaluator);
-                                }
+                            for (int c = 0; c < cellsCount; c++) {
+                                key = fileType.equalsIgnoreCase("xlsx") ? getCellAsString(sheetXlsx.getRow(0), c, formulaEvaluator) : getCellAsString(sheetXls.getRow(0), c, formulaEvaluator);
                                 value = getCellAsString(row, c, formulaEvaluator);
                                 try {
                                     object.put(key, value);
@@ -172,7 +239,6 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
                             pb.setVisibility(View.GONE);
                             textView.setText(jsonArray.toString());
-
                         }
                     });
 
@@ -187,6 +253,7 @@ public class MainActivity extends AppCompatActivity {
             Log.e(TAG, "readData:" + e.getLocalizedMessage());
         }
     }
+
 
     private static boolean isRowEmpty(Row row) {
         for (int c = row.getFirstCellNum(); c < row.getLastCellNum(); c++) {
