@@ -15,10 +15,13 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.JSONArray;
@@ -38,12 +41,14 @@ public class MainActivity extends AppCompatActivity {
     private static final int PICK_RESULT_CODE = 1;
     private List<User> userList = new ArrayList<>();
 
-    XSSFWorkbook workbook;
+    XSSFWorkbook workbookXlsx;
+    HSSFWorkbook workbookXls;
     InputStream stream;
     String extension, src, value, key;
     Uri uri;
     Intent chooseFile;
-    XSSFSheet sheet;
+    XSSFSheet sheetXlsx;
+    HSSFSheet sheetXls;
     FormulaEvaluator formulaEvaluator;
     Row row;
     StringBuilder rowValue;
@@ -51,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
     Cell cell;
     CellValue cellValue;
     ProgressBar pb;
-    JSONArray jsonArray=new JSONArray();
+    JSONArray jsonArray = new JSONArray();
 
     private TextView textView;
 
@@ -91,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
             if (src != null) {
                 extension = src.substring(src.lastIndexOf(".") + 1);
                 if (extension.equalsIgnoreCase("xlsx") || extension.equalsIgnoreCase("xls"))
-                    new ReadDataTask().execute(uri);
+                    new ReadDataTask(extension.trim().toLowerCase()).execute(uri);
             }
         }
     }
@@ -108,19 +113,34 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void readData(Uri filePath) {
+    private void readData(String fileType, Uri filePath) {
         try {
             stream = getContentResolver().openInputStream(filePath);
             try {
                 if (stream != null) {
-                    workbook = new XSSFWorkbook(stream);
-                    sheet = workbook.getSheetAt(0);
 
-                    int rowsCount = sheet.getPhysicalNumberOfRows();
-                    formulaEvaluator = workbook.getCreationHelper().createFormulaEvaluator();
+                    int rowsCount;
+
+                    if (fileType.equalsIgnoreCase("xlsx")) {
+                        workbookXlsx = new XSSFWorkbook(stream);
+                        sheetXlsx = workbookXlsx.getSheetAt(0);
+                        rowsCount = sheetXlsx.getPhysicalNumberOfRows();
+                        formulaEvaluator = workbookXlsx.getCreationHelper().createFormulaEvaluator();
+                    } else {
+                        workbookXls = new HSSFWorkbook(stream);
+                        sheetXls = workbookXls.getSheetAt(0);
+                        rowsCount = sheetXls.getPhysicalNumberOfRows();
+                        formulaEvaluator = workbookXls.getCreationHelper().createFormulaEvaluator();
+                    }
+
+
                     for (int r = 1; r < rowsCount; r++) {
 
-                        row = sheet.getRow(r);
+                        if (fileType.equalsIgnoreCase("xlsx")) {
+                            row = sheetXlsx.getRow(r);
+                        } else {
+                            row = sheetXls.getRow(r);
+                        }
 
                         if (isRowEmpty(row)) {
                             break;
@@ -131,7 +151,12 @@ public class MainActivity extends AppCompatActivity {
                             JSONObject object = new JSONObject();
 
                             for (int c = 1; c < cellsCount; c++) {
-                                key = getCellAsString(sheet.getRow(0), c, formulaEvaluator);
+
+                                if (fileType.equalsIgnoreCase("xlsx")) {
+                                    key = getCellAsString(sheetXlsx.getRow(0), c, formulaEvaluator);
+                                } else {
+                                    key = getCellAsString(sheetXls.getRow(0), c, formulaEvaluator);
+                                }
                                 value = getCellAsString(row, c, formulaEvaluator);
                                 try {
                                     object.put(key, value);
@@ -178,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
             cell = row.getCell(c);
             cellValue = formulaEvaluator.evaluate(cell);
 
-            if(cellValue!=null) {
+            if (cellValue != null) {
                 switch (cellValue.getCellType()) {
                     case Cell.CELL_TYPE_BOOLEAN:
                         value = "" + cellValue.getBooleanValue();
@@ -206,7 +231,14 @@ public class MainActivity extends AppCompatActivity {
         return value;
     }
 
-    class ReadDataTask extends AsyncTask<Uri,Void,JSONArray>{
+    class ReadDataTask extends AsyncTask<Uri, Void, JSONArray> {
+
+        private String fileType;
+
+        private ReadDataTask(String fileType) {
+            this.fileType = fileType;
+        }
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -215,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected JSONArray doInBackground(Uri... uris) {
-            readData(uris[0]);
+            readData(fileType, uris[0]);
             return null;
         }
     }
